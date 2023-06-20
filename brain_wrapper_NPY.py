@@ -32,14 +32,14 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
     layer_rate = learning_rate
     total_num = len(data_y)
 
-    '''
+
     if train_num % rate_tr != 0:
         print('Please reset rate_train')
     if valid_num % rate_va != 0:
         print('Please reset rate_valid')
     if test_num % rate_te != 0:
         print('Please reset rate_test')
-    '''
+
 
     cwd = os.getcwd()
     out_fname = f'{now_time}_h_{hidden_dim}_l_{layers}_lg_{lr_gamma}' \
@@ -129,6 +129,7 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
             #total_loss_valid_min = valid_loss.item()
             total_loss_valid_min = valid_loss
 
+        #optimizer.step()
         lr_sche.step()
 
     epoch_arr = np.array(epoch_list)
@@ -199,26 +200,26 @@ if __name__ == "__main__":
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
-             'minmax_y': [0, 3650],  # y_values are between 10 and 80
+             'minmax_y': [0, 1],  # y_values are between 10 and 80
              'drop_p': 0.5,  # Drop probability during training
              #'region_n': 94,  # Number of brain regions (input dim 2)
              'region_n': 3,
              'time_len': 100,  # Number of timepoints (input dim 1)
-             'n_epochs': 5000,
+             'n_epochs': 1000,
              # Iterable values
              #'learning_rate_list': [0.01, 0.001, 0.0001, 0.00001],
              'learning_rate_list': [0.01, 0.001],
              #'lr_gamma_list': [0.99, 0.975, 0.95],
-             'lr_gamma_list': [0.98],
+             'lr_gamma_list': [0.99, 0.95],
              #'hidden_dim_list': [200, 300],
-             'hidden_dim_list': [100],
+             'hidden_dim_list': [10, 50, 100],
              'layers_list': [3, 4],
-             'rate_train': 576,
-             'rate_valid': 64,
-             'rate_test': 155,
-             'number_train': 80,
+             'rate_train': 60,
+             'rate_valid': 20,
+             'rate_test': 35,
+             'number_train': 60,
              'number_valid': 20,
-             'number_test': 15,
+             'number_test': 35,
              'present_time': get_time}
 
     # Get data
