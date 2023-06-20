@@ -164,7 +164,7 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
 
 
 if __name__ == "__main__":
-    torch.cuda.empty_cache()
+    #torch.cuda.empty_cache()
 
     # solve display issue in ssh environment
     os.environ['QT_QPA_PLATFORM'] = 'offscreen'
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     param = {'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
-             'model': 'GRU',
+             'model': 'CPU',
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [4, 16789],  # x_values are between 4 and 16788.8
@@ -209,4 +209,4 @@ if __name__ == "__main__":
     for learning_rate, lr_gamma, hidden_dim, layers in product_set:
         wrapper(param, data_x, data_y, length, learning_rate, lr_gamma,
                 hidden_dim, layers)
-        torch.cuda.empty_cache()
+        #torch.cuda.empty_cache()

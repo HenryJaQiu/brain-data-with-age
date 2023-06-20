@@ -32,12 +32,14 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
     layer_rate = learning_rate
     total_num = len(data_y)
 
+    '''
     if train_num % rate_tr != 0:
         print('Please reset rate_train')
     if valid_num % rate_va != 0:
         print('Please reset rate_valid')
     if test_num % rate_te != 0:
         print('Please reset rate_test')
+    '''
 
     cwd = os.getcwd()
     out_fname = f'{now_time}_h_{hidden_dim}_l_{layers}_lg_{lr_gamma}' \
@@ -117,12 +119,15 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
             valid_loss = valid_loss + loss_valid
 
         epoch_list.append(i)
-        loss_list.append(valid_loss.item())
+        #loss_list.append(valid_loss.item())
+        loss_list.append(float(valid_loss))
         step_list.append('validation')
 
-        if valid_loss.item() <= total_loss_valid_min:
+        #if valid_loss.item() <= total_loss_valid_min:
+        if valid_loss <= total_loss_valid_min:
             torch.save(mynet.state_dict(), os.path.join(temp_path, 'model.pt'))
-            total_loss_valid_min = valid_loss.item()
+            #total_loss_valid_min = valid_loss.item()
+            total_loss_valid_min = valid_loss
 
         lr_sche.step()
 
@@ -163,6 +168,20 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
     df_result.to_csv(os.path.join(out_path, 'test_vs_real.csv'))
 
 
+def data_read_BraTS(path):
+    record = np.genfromtxt(path, delimiter=',')
+    # Age & MRI
+    # x, y = record[1:, 1:5], record[1:, -1]
+    # Only MRI
+    x, y = record[1:, 2:5], record[1:, -1]
+    return np.array(x), np.array(y)
+
+
+def data_read_NPY(path):
+    x = np.load(path)
+    return np.array(x)
+
+
 if __name__ == "__main__":
     torch.cuda.empty_cache()
 
@@ -171,36 +190,46 @@ if __name__ == "__main__":
     device = get_device()
     get_time = time.strftime("%m%d%H%M", time.localtime())
 
-    param = {'direct_npy_data': '',
+    param = {'BraTS_npy_data': 'rest_csv_data/x_val_ind.npy',
+             'BraTS_csv_data': 'rest_csv_data/out.csv',
              'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
              'model': 'GRU',
              'brain_region': 'all',
              'bidirection': False,
-             'minmax_x': [4, 16789],  # x_values are between 4 and 16788.8
-             'minmax_y': [10, 80],  # y_values are between 10 and 80
+             'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
+             'minmax_y': [0, 3650],  # y_values are between 10 and 80
              'drop_p': 0.5,  # Drop probability during training
-             'region_n': 94,  # Number of brain regions (input dim 2)
+             #'region_n': 94,  # Number of brain regions (input dim 2)
+             'region_n': 3,
              'time_len': 100,  # Number of timepoints (input dim 1)
              'n_epochs': 5000,
              # Iterable values
-             'learning_rate_list': [0.01, 0.001, 0.0001, 0.00001],
-             'lr_gamma_list': [0.99, 0.975, 0.95],
-             'hidden_dim_list': [200, 300],
+             #'learning_rate_list': [0.01, 0.001, 0.0001, 0.00001],
+             'learning_rate_list': [0.01, 0.001],
+             #'lr_gamma_list': [0.99, 0.975, 0.95],
+             'lr_gamma_list': [0.98],
+             #'hidden_dim_list': [200, 300],
+             'hidden_dim_list': [100],
              'layers_list': [3, 4],
              'rate_train': 576,
              'rate_valid': 64,
              'rate_test': 155,
-             'number_train': 576,
-             'number_valid': 64,
-             'number_test': 155,
+             'number_train': 80,
+             'number_valid': 20,
+             'number_test': 15,
              'present_time': get_time}
 
     # Get data
     print("Generating Data")
-    data_x, data_y, length = get_data(param)
+    #data_x, data_y, length = get_data(param)
+    data_x_single, data_y = data_read_BraTS(param['BraTS_csv_data'])
+    data_x = data_read_NPY(param['BraTS_npy_data'])
+    length = [len(data_x[i]) for i in range(len(data_x))]
 
+    print(data_x.shape)
+    print(data_y.shape)
 
 
     product_set = itertools.product(
@@ -208,6 +237,7 @@ if __name__ == "__main__":
         param['lr_gamma_list'],
         param['hidden_dim_list'],
         param['layers_list'])
+
 
     for learning_rate, lr_gamma, hidden_dim, layers in product_set:
         wrapper(param, data_x, data_y, length, learning_rate, lr_gamma,
