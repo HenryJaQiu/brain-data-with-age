@@ -221,14 +221,14 @@ if __name__ == "__main__":
              'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
-             'model': 'RNN',
+             'model': 'LSTM',
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
              'minmax_y': [0, 1],  # y_values are between 10 and 80
              'drop_p': 0.5,  # Drop probability during training
              #'region_n': 94,  # Number of brain regions (input dim 2)
-             'region_n': 3,
+             'region_n': 4, # 3 for MRI only and 4 for MRI & Age
              'time_len': 100,  # Number of timepoints (input dim 1)
              'n_epochs': 1000,
              # Iterable values
