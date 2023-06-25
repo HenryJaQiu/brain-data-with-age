@@ -12,7 +12,8 @@ from brain_plot import plot_result, plot_train_val_loss
 from brain_utils import (safe_make_dir, train, valid, get_tensor, get_data,
                          get_device, write_loss, normalize_tensor)
 
-
+from torchmetrics import MeanAbsolutePercentageError
+from torchmetrics import R2Score
 # Main
 def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
             hidden_dim, layers):
@@ -159,8 +160,22 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
                 batch_first=True, enforce_sorted=False)
 
         test_result = mynet(test_x_tensor)
+
+        criterion_mae = torch.nn.L1Loss()
+        criterion_mape = MeanAbsolutePercentageError()
+        criterion_r2 = R2Score()
+
         test_loss = criterion(test_result, test_y_tensor)
-        print(f"Test Loss: {test_loss.item()}")
+        test_loss_mae = criterion_mae(test_result, test_y_tensor)
+        test_loss_mape = criterion_mape(test_result, test_y_tensor)
+        test_loss_r2 = criterion_r2(test_result, test_y_tensor)
+
+        print(f"Test Loss (MSE): {test_loss.item()}")
+        print(f"Test Loss (RMSE): {torch.sqrt(test_loss).item()}")
+        print(f"Test Loss (MAE): {test_loss_mae.item()}")
+        print(f"Test Loss (MAPE): {test_loss_mape.item()}")
+        print(f"Test Loss (R2): {test_loss_r2.item()}")
+
     plot_result(test_y_tensor, test_result, minmax_y, out_path, out_fname)
 
     real_arr = normalize_tensor(test_y_tensor, minmax_y)[:, -1]
@@ -169,18 +184,28 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
     df_result.to_csv(os.path.join(out_path, 'test_vs_real.csv'))
 
 
-def data_read_BraTS(path):
+def data_read_BraTS(path, read_age):
     record = np.genfromtxt(path, delimiter=',')
+    if read_age:
     # Age & MRI
-    # x, y = record[1:, 1:5], record[1:, -1]
+        x, y = record[1:, 1], record[1:, -1]
+    else:
     # Only MRI
-    x, y = record[1:, 2:5], record[1:, -1]
+        x, y = record[1:, 2:5], record[1:, -1]
     return np.array(x), np.array(y)
 
 
 def data_read_NPY(path):
     x = np.load(path)
     return np.array(x)
+
+
+# Normalize data
+def normalize_data_BraTS(x, y):
+    x_data = (x-np.min(x))/(np.max(x)-np.min(x))
+    y_data = (y-np.min(y))/(np.max(y)-np.min(y))
+
+    return x_data, y_data
 
 
 if __name__ == "__main__":
@@ -196,7 +221,7 @@ if __name__ == "__main__":
              'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
-             'model': 'GRU',
+             'model': 'RNN',
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
@@ -225,9 +250,18 @@ if __name__ == "__main__":
     # Get data
     print("Generating Data")
     #data_x, data_y, length = get_data(param)
-    data_x_single, data_y = data_read_BraTS(param['BraTS_csv_data'])
+    data_x_age, data_y = data_read_BraTS(param['BraTS_csv_data'], 1)
+    data_x_age = (data_x_age - np.min(data_x_age)) / (np.max(data_x_age) - np.min(data_x_age))
+
     data_x = data_read_NPY(param['BraTS_npy_data'])
     length = [len(data_x[i]) for i in range(len(data_x))]
+
+    data_x, data_y = normalize_data_BraTS(data_x, data_y)
+
+    # concat age record into MRI sequences as X_i = (X_i1, X_i2, X_i3, X_age)
+    # remove those two lines if only using MRI data
+    data_x_age = np.tile(data_x_age, (1, 100, 1)).transpose(2, 1, 0)
+    data_x = np.concatenate([data_x, data_x_age], axis=-1)
 
     print(data_x.shape)
     print(data_y.shape)
