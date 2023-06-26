@@ -291,6 +291,12 @@ class DORNNCell_H(DORNNCell):
         hx = torch.cat(h_0+x_0, dim=1)
         hxp = torch.cat(h_0+x_0+[p_0], dim=1)
 
+        print(hx.size())
+        print(hxp.size())
+        print(self.pxh_p_w0.size())
+        print(self.pxh_p_b0.size())
+        print(self.pxh_p_w.size())
+
         p_1 = torch.matmul(torch.tanh(torch.matmul(hxp, self.pxh_p_w0)+self.pxh_p_b0), self.pxh_p_w) + self.pxh_p_b
         p_1 = self.sigmoid(p_1)
 

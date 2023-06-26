@@ -85,7 +85,8 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
             train_x_tensor, train_y_tensor, train_length_tensor = train(
                 device, tr*rate_tr, rate_tr, train_xdata, train_ydata,
                 train_length_x)
-            if model_name != 'FC':
+            if model_name != 'FC' and model_name in ['RNN', 'LSTM', 'GRU']:
+            #if model_name != 'FC':
                 train_x_tensor = pack_padded_sequence(
                     train_x_tensor, train_length_tensor,
                     batch_first=True, enforce_sorted=False)
@@ -110,7 +111,7 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
             valid_x_tensor, valid_y_tensor, valid_length_tensor = \
                 valid(device, va*rate_va, rate_va, valid_xdata,
                       valid_ydata, valid_length_x)
-            if model_name != 'FC':
+            if model_name in ['RNN','LSTM','GRU']:
                 valid_x_tensor = pack_padded_sequence(
                     valid_x_tensor, valid_length_tensor,
                     batch_first=True, enforce_sorted=False)
@@ -154,7 +155,8 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
     with torch.no_grad():
         test_x_tensor, test_y_tensor, test_length_tensor = get_tensor(
             device, data_x, data_y, length_x, train_num + valid_num, total_num)
-        if model_name != 'FC':
+        #if model_name in ['RNN', 'LSTM', 'GRU']:
+        if model_name in ['RNN','LSTM','GRU']:
             test_x_tensor = pack_padded_sequence(
                 test_x_tensor, test_length_tensor,
                 batch_first=True, enforce_sorted=False)
@@ -169,6 +171,9 @@ def wrapper(param, data_x, data_y, length_x, learning_rate, lr_gamma,
         test_loss_mae = criterion_mae(test_result, test_y_tensor)
         test_loss_mape = criterion_mape(test_result, test_y_tensor)
         test_loss_r2 = criterion_r2(test_result, test_y_tensor)
+
+        print(test_result)
+        print(test_y_tensor)
 
         print(f"Test Loss (MSE): {test_loss.item()}")
         print(f"Test Loss (RMSE): {torch.sqrt(test_loss).item()}")
@@ -221,7 +226,7 @@ if __name__ == "__main__":
              'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
-             'model': 'GRU',
+             'model': 'MRNN',
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
@@ -230,15 +235,15 @@ if __name__ == "__main__":
              #'region_n': 94,  # Number of brain regions (input dim 2)
              'region_n': 4, # 3 for MRI only and 4 for MRI & Age
              'time_len': 100,  # Number of timepoints (input dim 1)
-             'n_epochs': 1000,
+             'n_epochs': 100,
              # Iterable values
              #'learning_rate_list': [0.01, 0.001, 0.0001, 0.00001],
              'learning_rate_list': [0.01, 0.001],
              #'lr_gamma_list': [0.99, 0.975, 0.95],
              'lr_gamma_list': [0.99, 0.95],
              #'hidden_dim_list': [200, 300],
-             'hidden_dim_list': [10, 50, 100],
-             'layers_list': [3, 4],
+             'hidden_dim_list': [10, 50],
+             'layers_list': [2, 3],
              'rate_train': 60,
              'rate_valid': 20,
              'rate_test': 35,

@@ -50,8 +50,9 @@ class RNNClassifier(nn.Module):
         result, _status = self.rnn(x)
         out, lens_unpacked = pad_packed_sequence(result, batch_first=True)
         lens_unpacked = (lens_unpacked - 1).unsqueeze(1).unsqueeze(2)
-        #index = lens_unpacked.expand(lens_unpacked.size(0), lens_unpacked.size(1), out.size(2)).cuda()
-        index = lens_unpacked.expand(lens_unpacked.size(0), lens_unpacked.size(1), out.size(2)) # CPU only
+        index = lens_unpacked.expand(lens_unpacked.size(0),
+                                     lens_unpacked.size(1),
+                                     out.size(2))
         x = torch.gather(out, 1, index).squeeze()
         x = self.relu(self.bn1(self.fc1(x)))
         x = self.fc2(self.dropout(x))

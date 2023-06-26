@@ -115,12 +115,10 @@ class MRNNCell(nn.RNNCellBase):
         d_0 = hidden_state[2]
         x_s = hidden_state[3]
 
-        # dynamic d
         d_values = 0.5 * torch.sigmoid(self.d_d(d_0) + self.h_d(h_0) +
                                    self.m_d(m_0) + self.x_d(inputs))
 
-        x_combine = torch.cat([x_s, inputs.view(-1, inputs.size(0),
-                                         inputs.size(1))], 0)
+        x_combine = torch.cat([x_s, inputs.view(-1, inputs.size(0), inputs.size(1))], 0)
         x_filter = self.filter_d(x_combine, d_values)
         mem = torch.tanh(self.m_m(m_0) + self.f_m(x_filter))
         hid = torch.tanh(self.h_h(h_0) + self.x_h(inputs))
