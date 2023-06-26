@@ -221,7 +221,7 @@ if __name__ == "__main__":
              'data_folder': 'rest_csv_data',
              'device': device,
              'label_fname': 'preprocessed_data.csv',
-             'model': 'LSTM',
+             'model': 'GRU',
              'brain_region': 'all',
              'bidirection': False,
              'minmax_x': [0, 1],  # x_values are between 4 and 16788.8
